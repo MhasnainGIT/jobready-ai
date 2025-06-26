@@ -12,7 +12,7 @@ exports.analyzeResume = async (req, res) => {
 
   try {
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: 'gpt-3.5-turbo',
       messages: [
         { role: 'system', content: 'You are a professional resume reviewer.' },
         { role: 'user', content: prompt },
@@ -44,7 +44,7 @@ exports.generateInterview = async (req, res) => {
   const prompt = `Generate 5 realistic interview questions for the role of ${jobRole}. For each, provide a sample answer. Return as a JSON array of objects with keys: question and answer.`;
   try {
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: 'gpt-3.5-turbo',
       messages: [
         { role: 'system', content: 'You are an expert interview coach.' },
         { role: 'user', content: prompt },
