@@ -24,70 +24,35 @@ const InterviewCoach: React.FC = () => {
     }
 
     setIsGenerating(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      const mockQuestions: Question[] = [
-        {
-          question: "Tell me about yourself and why you're interested in this role.",
-          category: "General",
-          difficulty: "Easy",
-          sampleAnswer: "I'm a passionate software engineer with 3 years of experience in full-stack development. I've worked extensively with React, Node.js, and cloud technologies. I'm excited about this role because it combines my technical skills with my interest in building scalable applications that impact users directly.",
-          tips: [
-            "Keep it concise (2-3 minutes max)",
-            "Focus on relevant experience",
-            "Connect your background to the role"
-          ]
+    setQuestions([]);
+    try {
+      const BASE_URL = import.meta.env.VITE_API_BASE;
+      const token = localStorage.getItem('token'); // Assumes JWT is stored here after login
+      const response = await fetch(`${BASE_URL}/api/generate-interview`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
-        {
-          question: "Describe a challenging project you worked on and how you overcame obstacles.",
-          category: "Behavioral",
-          difficulty: "Medium",
-          sampleAnswer: "I led the development of a real-time dashboard that initially faced performance issues with large datasets. I identified the bottleneck in our database queries, implemented efficient caching strategies, and optimized our React components. The result was a 70% improvement in load times and better user experience.",
-          tips: [
-            "Use the STAR method (Situation, Task, Action, Result)",
-            "Be specific about your contributions",
-            "Quantify the impact when possible"
-          ]
-        },
-        {
-          question: "How do you handle working with tight deadlines and multiple priorities?",
-          category: "Situational",
-          difficulty: "Medium",
-          sampleAnswer: "I prioritize tasks based on business impact and dependencies. I use project management tools to track progress and communicate regularly with stakeholders about realistic timelines. When facing competing priorities, I discuss with my manager to align on what's most critical.",
-          tips: [
-            "Show your organizational skills",
-            "Mention specific tools or methods you use",
-            "Demonstrate communication skills"
-          ]
-        },
-        {
-          question: "Explain a complex technical concept to someone without a technical background.",
-          category: "Technical Communication",
-          difficulty: "Medium",
-          sampleAnswer: "APIs are like waiters in a restaurant. When you order food, the waiter takes your request to the kitchen and brings back your meal. Similarly, an API takes a request from one application, processes it with another system, and returns the requested information.",
-          tips: [
-            "Use simple analogies",
-            "Avoid jargon",
-            "Check for understanding"
-          ]
-        },
-        {
-          question: "Where do you see yourself in 5 years?",
-          category: "Career Goals",
-          difficulty: "Easy",
-          sampleAnswer: "In 5 years, I see myself having grown into a technical lead role, mentoring junior developers and contributing to architectural decisions. I'd like to have deepened my expertise in cloud technologies and contributed to open-source projects that benefit the broader developer community.",
-          tips: [
-            "Show ambition but be realistic",
-            "Align with potential career paths at the company",
-            "Demonstrate commitment to growth"
-          ]
-        }
-      ];
-      
-      setQuestions(mockQuestions);
+        body: JSON.stringify({ jobRole, jobDescription })
+      });
+      if (!response.ok) {
+        throw new Error('Failed to generate interview questions');
+      }
+      const data = await response.json();
+      // Adapt to your backend's response structure
+      if (Array.isArray(data.questions)) {
+        setQuestions(data.questions);
+      } else if (Array.isArray(data.interview)) {
+        setQuestions(data.interview);
+      } else {
+        throw new Error('Unexpected response format');
+      }
+    } catch (error) {
+      alert('Error generating questions: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    } finally {
       setIsGenerating(false);
-    }, 2000);
+    }
   };
 
   const getDifficultyColor = (difficulty: string) => {

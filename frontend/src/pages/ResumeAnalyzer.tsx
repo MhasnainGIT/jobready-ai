@@ -32,45 +32,36 @@ const ResumeAnalyzer: React.FC = () => {
     }
 
     setIsAnalyzing(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      const mockResult: AnalysisResult = {
-        grammar: {
-          score: 85,
-          issues: [
-            'Line 3: "Experienced in developing" should be "Experienced in development"',
-            'Line 12: Missing comma after "Additionally"'
-          ],
-          suggestions: [
-            'Use active voice throughout your resume',
-            'Ensure consistent tense usage',
-            'Add action verbs to bullet points'
-          ]
+    setAnalysisResult(null);
+    try {
+      const BASE_URL = import.meta.env.VITE_API_BASE;
+      const token = localStorage.getItem('token'); // Assumes JWT is stored here after login
+      const response = await fetch(`${BASE_URL}/api/analyze-resume`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
-        skills: {
-          matched: ['JavaScript', 'React', 'Node.js', 'Git'],
-          missing: ['TypeScript', 'AWS', 'Docker', 'Agile'],
-          suggestions: [
-            'Add TypeScript to your technical skills section',
-            'Mention AWS experience if you have any',
-            'Include Docker and containerization experience'
-          ]
-        },
-        tailoring: {
-          score: 72,
-          recommendations: [
-            'Add more specific metrics and achievements',
-            'Include industry-specific keywords',
-            'Align your experience section with job requirements',
-            'Add a professional summary section'
-          ]
-        }
-      };
-      
-      setAnalysisResult(mockResult);
+        body: JSON.stringify({ resumeText: resume, jobDescription })
+      });
+      if (!response.ok) {
+        throw new Error('Failed to analyze resume');
+      }
+      const data = await response.json();
+      // Adapt to your backend's response structure
+      if (data.grammar && data.skills && data.tailoring) {
+        setAnalysisResult(data);
+      } else if (data.analysis) {
+        // If backend returns { analysis: { ... } }
+        setAnalysisResult(data.analysis);
+      } else {
+        throw new Error('Unexpected response format');
+      }
+    } catch (error) {
+      alert('Error analyzing resume: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    } finally {
       setIsAnalyzing(false);
-    }, 2000);
+    }
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {

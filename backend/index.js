@@ -6,11 +6,17 @@ const mongoose = require('mongoose');
 const authRoutes = require('./routes/auth');
 const apiRoutes = require('./routes/api');
 const paymentRoutes = require('./routes/payments');
+const cors = require('cors');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(express.json());
+app.use(cors({
+  origin: 'http://localhost:5173', // or '*' for all origins, but this is less secure
+  credentials: true, // if you use cookies or need credentials
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI, {   
