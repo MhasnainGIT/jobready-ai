@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Upload, FileText, CheckCircle, AlertCircle, Zap, Target, Brain, ArrowRight } from 'lucide-react';
 import Card from '../components/Card';
+import { API_BASE_URL } from '../config';
 
 interface AnalysisResult {
   grammar: {
@@ -34,9 +35,8 @@ const ResumeAnalyzer: React.FC = () => {
     setIsAnalyzing(true);
     setAnalysisResult(null);
     try {
-      const BASE_URL = import.meta.env.VITE_API_BASE;
-      const token = localStorage.getItem('token'); // Assumes JWT is stored here after login
-      const response = await fetch(`${BASE_URL}/api/analyze-resume`, {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/api/analyze-resume`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -44,9 +44,22 @@ const ResumeAnalyzer: React.FC = () => {
         },
         body: JSON.stringify({ resumeText: resume, jobDescription })
       });
+      
       if (!response.ok) {
-        throw new Error('Failed to analyze resume');
+        const errorText = await response.text();
+        let errorMessage = 'Failed to analyze resume';
+        
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          // If response is not JSON, use the text
+          errorMessage = errorText || errorMessage;
+        }
+        
+        throw new Error(errorMessage);
       }
+      
       const data = await response.json();
       // Adapt to your backend's response structure
       if (data.grammar && data.skills && data.tailoring) {
